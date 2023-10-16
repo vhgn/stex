@@ -1,8 +1,8 @@
 [workspace]
 
 members = [
-    "stex-cli",
-	"stex-app",
-	"stex-server",
+    "stex_cli",
+	"stex_server",
+	"stex_common",
 ]
 

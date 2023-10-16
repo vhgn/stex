@@ -1,8 +1,9 @@
 [package]
-name = "stex-app"
+name = "stex_server"
 version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+stex_common = { path = "../stex_common" }
