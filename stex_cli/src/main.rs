@@ -1,16 +1,18 @@
-use stex_common::threadpool::{Executor, ThreadPool};
-
-struct CliExecutor;
-type ExecutorParam = &'static str;
-
-impl Executor<ExecutorParam> for CliExecutor {
-    fn execute(command: ExecutorParam) {
-        println!("Executing command: {}", command);
-    }
-}
+use std::io::Read;
+use std::net::TcpListener;
 
 fn main() {
-    println!("Hello, world!");
-    let pool = ThreadPool::<CliExecutor, ExecutorParam>::new(4);
-    pool.push("");
+    let listener = TcpListener::bind("0.0.0.0:6969").expect("Failed to bind to port");
+
+    for stream in listener.incoming() {
+        if let Ok(mut stream) = stream {
+            let mut buffer = String::new();
+            stream
+                .read_to_string(&mut buffer)
+                .expect("Failed to read from stream");
+            println!("{}", buffer);
+        } else {
+            eprintln!("failed to accept connection");
+        }
+    }
 }
