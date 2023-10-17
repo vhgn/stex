@@ -44,6 +44,7 @@ async fn handle_connection(incoming_stream: TcpStream, db: Db) {
     let host = get_host_for_domain(&db, "exam")
         .await
         .expect("Failed to get host");
+    println!("host: {}", host);
     redirect_stream(incoming_stream, host)
 }
 
