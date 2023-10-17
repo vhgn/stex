@@ -1,6 +1,5 @@
 use anyhow::Result;
 use dotenvy::dotenv;
-use futures::executor::block_on;
 
 use libsql_client::args;
 use libsql_client::Client;
@@ -11,6 +10,7 @@ use std::sync::Arc;
 use std::sync::Mutex;
 use std::thread;
 use stex_common::redirect::redirect_stream;
+use tokio::runtime::Runtime;
 
 type Db = Arc<Mutex<Client>>;
 
@@ -22,7 +22,15 @@ async fn main() -> Result<()> {
     let db = Arc::new(Mutex::new(Client::from_env().await?));
     for stream in listener.incoming() {
         if let Ok(stream) = stream {
-            handle_connection(stream, db.clone());
+            let db = db.clone();
+            thread::spawn(move || {
+                let rt = Runtime::new().unwrap();
+                rt.block_on(async {
+                    handle_connection(stream, db).await;
+                });
+            })
+            .join()
+            .unwrap();
         } else {
             eprintln!("failed to accept connection");
         }
@@ -31,12 +39,12 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
-fn handle_connection(incoming_stream: TcpStream, db: Db) {
-    thread::spawn(move || {
-        let db = db.lock().unwrap();
-        let host = block_on(get_host_for_domain(&db, "exam")).expect("Failed to get host");
-        redirect_stream(incoming_stream, host)
-    });
+async fn handle_connection(incoming_stream: TcpStream, db: Db) {
+    let db = db.lock().unwrap();
+    let host = get_host_for_domain(&db, "exam")
+        .await
+        .expect("Failed to get host");
+    redirect_stream(incoming_stream, host)
 }
 
 async fn get_host_for_domain(db: &Client, domain: &str) -> Option<String> {

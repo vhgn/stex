@@ -1712,7 +1712,6 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "dotenvy",
- "futures",
  "libsql-client",
  "serde",
  "stex_common",
